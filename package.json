@@ -1,5 +1,14 @@
 {
+  "name": "redblue-agent",
+  "version": "2.0.0",
   "type": "module",
+  "description": "Red team MCP vulnerability testing agent",
+  "scripts": {
+    "start": "npx tsx main.ts",
+    "test:harness": "npx tsx test-harness.ts",
+    "test:echo": "npx tsx test-echo-mcp.ts",
+    "research": "npx tsx index.ts"
+  },
   "dependencies": {
     "@e2b/code-interpreter": "^2.2.0",
     "@modelcontextprotocol/sdk": "^1.22.0",
