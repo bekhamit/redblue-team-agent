@@ -1,22 +1,24 @@
 # Red Team MCP Vulnerability Testing Agent
 
-An automated red team testing system that uses AI to generate malicious inputs and test MCP (Model Context Protocol) servers for security vulnerabilities.
+An automated red team testing system that uses AI to generate malicious inputs and test MCP (Model Context Protocol) servers for security vulnerabilities. **Runs entirely in E2B sandbox for true cloud isolation.**
 
 ## Features
 
 ### 🎯 Red Team Testing (Main Feature)
+- **E2B Sandbox Execution**: Entire application runs in isolated cloud sandbox
 - **Automated Vulnerability Discovery**: AI-powered test case generation using Groq
 - **Intentionally Vulnerable MCP**: Echo server with no protections for testing
 - **Comprehensive Test Harness**: Automated testing framework with pass/fail detection
 - **Multi-Vector Attacks**: Tests for XSS, SQL injection, prompt injection, timeout attacks, and more
 - **Detailed Reporting**: Full analysis with vulnerability breakdown by attack type
+- **Real-time Output Streaming**: See test results as they happen in the cloud
 
 ## Prerequisites
 
 You'll need API keys from:
-- [Groq](https://console.groq.com) - For LLM-powered test generation
-- [E2B](https://e2b.dev) - For sandbox environment (optional for research mode)
-- [Exa AI](https://exa.ai) - For web search (optional for research mode)
+- [Groq](https://console.groq.com) - For LLM-powered test generation (required)
+- [E2B](https://e2b.dev) - For sandbox environment (required)
+- [Exa AI](https://exa.ai) - For web search (optional, only for research mode)
 
 ## Setup
 
@@ -29,62 +31,72 @@ You'll need API keys from:
 2. **Install dependencies**
    ```bash
    npm install
-   cd echo-mcp && npm install && cd ..
    ```
 
-3. **Build the echo MCP server**
-   ```bash
-   cd echo-mcp && npm run build && cd ..
-   ```
-
-4. **Configure environment variables**
+3. **Configure environment variables**
    ```bash
    cp .env.example .env
    ```
 
    Then edit `.env` and add your API keys:
    ```
-   GROQ_API_KEY=your_groq_api_key_here
-   E2B_API_KEY=your_e2b_api_key_here  # Optional
-   EXA_API_KEY=your_exa_api_key_here  # Optional
+   GROQ_API_KEY=your_groq_api_key_here        # Required
+   E2B_API_KEY=your_e2b_api_key_here          # Required
+   EXA_API_KEY=your_exa_api_key_here          # Optional (for research mode)
    ```
+
+**Note**: The echo MCP server is automatically built inside the E2B sandbox - no local build needed!
 
 ## Usage
 
-### Red Team MCP Testing (Main)
+### 🚀 Red Team MCP Testing in E2B Sandbox (Main)
 
-Run the full red team vulnerability testing:
+Run the full red team vulnerability testing in E2B cloud sandbox:
 
 ```bash
 npm start
 ```
 
 This will:
-1. Generate 15 malicious test cases using Groq
-2. Connect to the vulnerable echo MCP server
-3. Execute all tests and detect vulnerabilities
-4. Provide comprehensive security assessment
+1. **Create E2B sandbox** in the cloud
+2. **Upload all source files** to the sandbox
+3. **Install dependencies** inside the sandbox
+4. **Build echo MCP server** inside the sandbox
+5. **Generate 15 malicious test cases** using Groq
+6. **Execute all tests** against the vulnerable MCP
+7. **Stream results** in real-time from the cloud
+8. **Provide comprehensive security assessment**
+9. **Clean up sandbox** automatically
 
-### Test Harness with Hardcoded Tests
+**Benefits of E2B Mode:**
+- ✅ True cloud isolation
+- ✅ No local MCP process needed
+- ✅ Fits hackathon theme
+- ✅ Scalable for testing multiple MCPs
 
-Test the harness with predefined test cases:
+### 💻 Local Mode (Alternative)
 
+For faster iteration during development:
+
+```bash
+npm run start:local
+```
+
+Runs everything locally without E2B sandbox (requires manual echo-mcp build).
+
+### Other Commands
+
+**Test Harness with Hardcoded Tests:**
 ```bash
 npm run test:harness
 ```
 
-### Test Echo MCP Server
-
-Test the echo MCP server directly:
-
+**Test Echo MCP Server Directly:**
 ```bash
 npm run test:echo
 ```
 
-### Research Agent
-
-Run the AI research agent (original functionality):
-
+**Research Agent (Original Feature):**
 ```bash
 npm run research
 ```
@@ -174,29 +186,57 @@ Total Tests:  15
 
 ## Architecture
 
-### Red Team Testing System
+### E2B Cloud Execution Model
 
 ```
-┌─────────────────┐
-│   Groq LLM      │  Generate malicious test cases
-│  (Red Team AI)  │
-└────────┬────────┘
-         │
-         │ Test cases
-         ▼
-┌─────────────────┐
-│  Test Harness   │  Execute tests & validate results
-└────────┬────────┘
-         │
-         │ MCP calls
-         ▼
-┌─────────────────┐
-│   Echo MCP      │  Vulnerable echo server
-│  (INTENTIONAL)  │  • No input validation
-│                 │  • No output sanitization
-│                 │  • No timeout protection
-└─────────────────┘
+┌──────────────────────────────────────────────────────┐
+│ LOCAL MACHINE                                        │
+│                                                      │
+│  run-in-e2b.ts (Orchestrator)                       │
+│    │                                                 │
+│    ├─ Creates E2B Sandbox                           │
+│    ├─ Uploads source files                          │
+│    ├─ Installs dependencies                         │
+│    └─ Executes application                          │
+│         │                                            │
+└─────────┼────────────────────────────────────────────┘
+          │ HTTPS
+          ▼
+┌──────────────────────────────────────────────────────┐
+│ E2B SANDBOX (Cloud)                                  │
+│                                                      │
+│  ┌────────────────────────────────────────────────┐ │
+│  │ main.ts (Red Team Pipeline)                   │ │
+│  │                                                │ │
+│  │  ┌──────────────────┐                         │ │
+│  │  │  Groq LLM        │ Generate test cases     │ │
+│  │  │  (via API)       │                         │ │
+│  │  └────────┬─────────┘                         │ │
+│  │           │                                    │ │
+│  │           ▼                                    │ │
+│  │  ┌──────────────────┐                         │ │
+│  │  │  Test Harness    │ Execute & validate      │ │
+│  │  └────────┬─────────┘                         │ │
+│  │           │ STDIO                              │ │
+│  │           ▼                                    │ │
+│  │  ┌──────────────────┐                         │ │
+│  │  │  Echo MCP Server │ Vulnerable (intentional)│ │
+│  │  │  • No validation │                         │ │
+│  │  │  • No sanitize   │                         │ │
+│  │  │  • No timeout    │                         │ │
+│  │  └──────────────────┘                         │ │
+│  │                                                │ │
+│  └────────────────────────────────────────────────┘ │
+│                                                      │
+│  Results streamed back to local machine via HTTPS   │
+└──────────────────────────────────────────────────────┘
 ```
+
+**Key Points:**
+- 🌐 Everything runs in E2B cloud sandbox
+- 📤 Local machine just uploads code and streams output
+- 🔒 True isolation - no local MCP processes
+- 🚀 Scalable for testing multiple MCPs in parallel
 
 ### Validation Rules
 
@@ -219,18 +259,18 @@ Tests **PASS** if:
 
 ```
 redblue-agent/
-├── echo-mcp/              # Vulnerable MCP server for testing
-│   ├── src/server.ts      # Intentionally vulnerable echo server
-│   └── package.json
-├── main.ts                # Main entry point for red team testing
+├── run-in-e2b.ts          # E2B orchestrator (main entry point)
+├── main.ts                # Red team testing pipeline (runs in E2B)
 ├── red-team-agent.ts      # AI-powered test case generator
 ├── harness.ts             # Test execution harness
 ├── validators.ts          # Pass/fail detection logic
 ├── types.ts               # Shared TypeScript types
-├── test-harness.ts        # Hardcoded test runner
-├── test-echo-mcp.ts       # Echo MCP verification
-└── index.ts               # Original research agent
-
+├── echo-mcp/              # Vulnerable MCP server for testing
+│   ├── src/server.ts      # Intentionally vulnerable echo server
+│   └── package.json
+├── test-harness.ts        # Hardcoded test runner (local only)
+├── test-echo-mcp.ts       # Echo MCP verification (local only)
+└── index.ts               # Original research agent (separate feature)
 ```
 
 ## Customization

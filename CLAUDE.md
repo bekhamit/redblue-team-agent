@@ -10,62 +10,103 @@ An automated security testing system that uses AI to generate malicious inputs a
 
 ### Where Everything Runs
 
-**ALL components run locally on your machine (NOT in E2B sandbox for MVP):**
+**ALL application components run in E2B sandbox (cloud), orchestrated from local machine:**
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    YOUR LOCAL MACHINE                        │
-│                                                              │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │ main.ts (Orchestrator)                             │    │
-│  │ - Coordinates all components                       │    │
-│  │ - Runs in Node.js process                          │    │
-│  └──┬────────────────────────────────────────────┬────┘    │
-│     │                                             │         │
-│     ▼                                             ▼         │
-│  ┌──────────────────────┐          ┌─────────────────────┐ │
-│  │ Red Team Agent       │          │ Test Harness        │ │
-│  │ (red-team-agent.ts)  │          │ (harness.ts)        │ │
-│  │                      │          │                     │ │
-│  │ - Calls Groq API ────┼──────────┼─► Groq Cloud       │ │
-│  │   (over internet)    │          │                     │ │
-│  │ - Generates tests    │          │ - Spawns MCP client │ │
-│  │ - Returns JSON       │          │ - Runs validators   │ │
-│  └──────────────────────┘          └──────┬──────────────┘ │
-│                                            │                │
-│                                            │ STDIO          │
-│                                            │ (stdin/stdout) │
-│                                            ▼                │
-│                            ┌───────────────────────────┐   │
-│                            │ Echo MCP Server           │   │
-│                            │ (echo-mcp/dist/server.js) │   │
-│                            │                           │   │
-│                            │ - Separate Node process   │   │
-│                            │ - Listens on STDIO        │   │
-│                            │ - Echoes back inputs      │   │
-│                            │ - INTENTIONALLY VULNERABLE│   │
-│                            └───────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│ LOCAL MACHINE                                        │
+│                                                      │
+│  run-in-e2b.ts (Orchestrator)                       │
+│    │                                                 │
+│    ├─ Creates E2B Sandbox (HTTPS API)               │
+│    ├─ Uploads source files (files.write)            │
+│    ├─ Installs dependencies (commands.run)          │
+│    ├─ Builds TypeScript (commands.run)              │
+│    └─ Executes application (commands.run)           │
+│         │                                            │
+│         │ Streams output via HTTPS                   │
+│         ▼                                            │
+└─────────┼────────────────────────────────────────────┘
+          │ HTTPS
+          ▼
+┌──────────────────────────────────────────────────────┐
+│ E2B SANDBOX (Cloud)                                  │
+│                                                      │
+│  /app/ directory:                                    │
+│    │                                                 │
+│    ├─ main.ts (Red Team Pipeline)                   │
+│    ├─ red-team-agent.ts ──► Groq API (HTTPS)        │
+│    ├─ harness.ts                                    │
+│    ├─ validators.ts                                 │
+│    ├─ types.ts                                      │
+│    └─ echo-mcp/                                     │
+│         └─ dist/server.js (MCP via STDIO)           │
+│                                                      │
+│  Execution flow inside sandbox:                     │
+│    main.ts                                          │
+│      ↓                                              │
+│    red-team-agent.ts (calls Groq)                  │
+│      ↓ (generates test cases)                       │
+│    harness.ts                                       │
+│      ↓ (spawns MCP server child process)           │
+│    echo-mcp/dist/server.js                         │
+│      ↓ (STDIO communication)                        │
+│    harness.ts (validates results)                  │
+│      ↓                                              │
+│    main.ts (displays report)                       │
+│                                                      │
+└──────────────────────────────────────────────────────┘
 ```
 
-### Why No E2B Sandbox in MVP?
+### Why E2B Sandbox?
 
-For simplicity and speed in the hackathon, we run everything locally:
-- ✅ Faster development iteration
-- ✅ No sandbox setup overhead
-- ✅ Easier debugging
-- ✅ No additional costs
+For the hackathon, we use E2B sandbox to align with the theme:
+- ✅ True cloud isolation (hackathon requirement!)
+- ✅ Showcases E2B capabilities
+- ✅ No local MCP processes needed
+- ✅ Scalable for testing multiple MCPs
+- ✅ Fits "MCP in the cloud" narrative
 
-**Future Enhancement**: The echo MCP server could be deployed to E2B sandbox for true isolation, but it's not required for the MVP.
+**Development Mode**: `npm run start:local` runs everything locally for faster iteration
 
 ---
 
 ## How It Works: Step-by-Step Flow
 
-### 1️⃣ Startup (`npm start` runs `main.ts`)
+### 0️⃣ E2B Orchestration (`npm start` runs `run-in-e2b.ts`)
 
 ```typescript
-// main.ts orchestrates everything
+// run-in-e2b.ts orchestrates E2B sandbox
+
+// 1. Create sandbox in cloud
+const sandbox = await Sandbox.create('base', {
+  envs: { GROQ_API_KEY: process.env.GROQ_API_KEY },
+  timeoutMs: 600_000,
+})
+
+// 2. Upload all source files
+await sandbox.files.write('/app/main.ts', fs.readFileSync('main.ts'))
+await sandbox.files.write('/app/harness.ts', fs.readFileSync('harness.ts'))
+// ... upload all files
+
+// 3. Install dependencies in sandbox
+await sandbox.commands.run('cd /app && npm install')
+await sandbox.commands.run('cd /app/echo-mcp && npm install && npm run build')
+
+// 4. Run the application in sandbox with streaming output
+await sandbox.commands.run('cd /app && npx tsx main.ts', {
+  onStdout: (output) => process.stdout.write(output),  // Stream to console
+  onStderr: (output) => process.stderr.write(output),
+})
+
+// 5. Cleanup
+await sandbox.kill()
+```
+
+### 1️⃣ Startup (Inside E2B: `main.ts`)
+
+```typescript
+// main.ts orchestrates everything (runs in E2B sandbox)
 
 const redTeamAgent = new RedTeamAgent()  // Creates Groq client
 const harness = new MCPTestHarness()     // Creates MCP test runner
@@ -697,25 +738,35 @@ npm start  # Restart
 ## Summary
 
 **What runs in E2B sandbox?**
-- **Nothing in MVP!** Everything runs locally.
-
-**What runs locally?**
-- ✅ main.ts (orchestrator)
-- ✅ red-team-agent.ts (calls Groq API)
+- ✅ **Everything!** All application code runs in E2B cloud
+- ✅ main.ts (red team pipeline)
+- ✅ red-team-agent.ts (calls Groq API from cloud)
 - ✅ harness.ts (test runner)
 - ✅ validators.ts (pass/fail logic)
-- ✅ echo-mcp server (separate Node process)
+- ✅ echo-mcp server (spawned as child process in sandbox)
+
+**What runs locally?**
+- run-in-e2b.ts (orchestrator only)
+  - Creates sandbox
+  - Uploads files
+  - Executes commands
+  - Streams output
+  - Cleans up
 
 **How do they communicate?**
-- main.ts → red-team-agent: Direct function calls
-- main.ts → harness: Direct function calls
-- harness → echo-mcp: STDIO transport (stdin/stdout)
-- red-team-agent → Groq: HTTPS API calls
+- Local → E2B: HTTPS (Sandbox API)
+- Inside E2B sandbox:
+  - main.ts → red-team-agent: Direct function calls
+  - main.ts → harness: Direct function calls
+  - harness → echo-mcp: STDIO transport (stdin/stdout)
+  - red-team-agent → Groq: HTTPS API calls (from cloud)
+- E2B → Local: HTTPS streaming (output)
 
 **Why this architecture?**
-- 🚀 Fast development for hackathon
-- 🐛 Easy debugging on local machine
-- 💰 No E2B costs
-- 📦 Simple to run: `npm start`
+- 🎯 Aligns with hackathon theme (E2B sandbox)
+- 🔒 True cloud isolation
+- 🚀 Scalable for testing multiple MCPs
+- 📤 No local MCP processes
+- 🌐 Showcases E2B capabilities
 
-**Future: E2B integration for true isolation and cloud deployment**
+**Development Alternative**: `npm run start:local` for faster local iteration
