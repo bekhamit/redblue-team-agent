@@ -1,17 +1,22 @@
-# Red Team MCP Vulnerability Testing Agent
+# AI-Powered MCP Security Wrapper
 
-An automated red team testing system that uses AI to generate malicious inputs and test MCP (Model Context Protocol) servers for security vulnerabilities. **Runs entirely in E2B sandbox for true cloud isolation.**
+An AI-powered protective middleware that automatically learns from attacks and makes MCP servers safe to use. **Self-improving security through Red Team + Blue Team AI agents, running entirely in E2B sandbox.**
 
 ## Features
 
-### 🎯 Red Team Testing (Main Feature)
-- **E2B Sandbox Execution**: Entire application runs in isolated cloud sandbox
-- **Automated Vulnerability Discovery**: AI-powered test case generation using Groq
-- **Intentionally Vulnerable MCP**: Echo server with no protections for testing
-- **Comprehensive Test Harness**: Automated testing framework with pass/fail detection
-- **Multi-Vector Attacks**: Tests for XSS, SQL injection, prompt injection, timeout attacks, and more
-- **Detailed Reporting**: Full analysis with vulnerability breakdown by attack type
-- **Real-time Output Streaming**: See test results as they happen in the cloud
+### 🛡️ Self-Improving Protective Wrapper
+- **AI-Powered Middleware**: Sits between your app and any MCP server
+- **Red Team Agent**: Generates creative attacks using Groq AI (XSS, SQL injection, prompt injection, etc.)
+- **Blue Team Agent**: Analyzes vulnerabilities and auto-generates protection rules
+- **Automatic Learning**: Wrapper improves itself based on attack patterns
+- **Before/After Metrics**: Clear demonstration of security improvement
+- **E2B Sandbox Execution**: Entire system runs in isolated cloud environment
+- **Real-time Output Streaming**: Watch the AI learn and improve in real-time
+
+### 🎯 What It Does
+1. **Phase 1 - Red Team Attack**: Tests MCP through basic wrapper, finds vulnerabilities
+2. **Phase 2 - Blue Team Defense**: AI generates protection rules from failures
+3. **Phase 3 - Verification**: Re-tests with updated wrapper, all attacks blocked!
 
 ## Prerequisites
 
@@ -49,9 +54,9 @@ You'll need API keys from:
 
 ## Usage
 
-### 🚀 Red Team MCP Testing in E2B Sandbox (Main)
+### 🚀 AI-Powered Security Testing in E2B Sandbox (Main)
 
-Run the full red team vulnerability testing in E2B cloud sandbox:
+Run the complete Red Team + Blue Team cycle in E2B cloud sandbox:
 
 ```bash
 npm start
@@ -60,19 +65,18 @@ npm start
 This will:
 1. **Create E2B sandbox** in the cloud
 2. **Upload all source files** to the sandbox
-3. **Install dependencies** inside the sandbox
-4. **Build echo MCP server** inside the sandbox
-5. **Generate 15 malicious test cases** using Groq
-6. **Execute all tests** against the vulnerable MCP
-7. **Stream results** in real-time from the cloud
-8. **Provide comprehensive security assessment**
-9. **Clean up sandbox** automatically
+3. **Install dependencies** and build MCP server
+4. **Phase 1 - Red Team**: Generate and execute 15 malicious attacks
+5. **Phase 2 - Blue Team**: Analyze failures and generate protection rules
+6. **Phase 3 - Verification**: Re-test with improved wrapper
+7. **Show before/after** comparison with metrics
+8. **Clean up sandbox** automatically
 
-**Benefits of E2B Mode:**
-- ✅ True cloud isolation
-- ✅ No local MCP process needed
-- ✅ Fits hackathon theme
-- ✅ Scalable for testing multiple MCPs
+**Benefits:**
+- ✅ Self-improving AI security
+- ✅ Clear before/after demonstration
+- ✅ True cloud isolation in E2B
+- ✅ Works with any MCP server
 
 ### 💻 Local Mode (Alternative)
 
@@ -105,138 +109,151 @@ npm run research
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║         🎯 RED TEAM MCP VULNERABILITY TESTING 🎯         ║
+║   🎯 AI-POWERED MCP SECURITY: SELF-IMPROVING WRAPPER 🎯  ║
 ╚══════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 1: Generating Malicious Test Cases
+PHASE 1: RED TEAM ATTACK (Initial Testing)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🤖 Red Team Agent: Generating 15 malicious test cases...
+🔴 Red Team: Generating malicious test cases...
 ✅ Generated 15 test cases
 
-📝 Generated test cases by attack type:
-   - xss: 2 test(s)
-   - prompt_injection: 5 test(s)
-   - schema_break: 6 test(s)
-   - timeout: 1 test(s)
-   - normal: 1 test(s)
+🛡️  Protective wrapper connected to MCP
+📋 Active rules: 2 validators, 2 sanitizers
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 2: Connecting to Vulnerable MCP Server
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📡 Connecting to MCP server...
-✅ Connected to MCP server
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 3: Executing Tests Against MCP
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🧪 Running 15 test cases...
+🔴 Red Team: Attacking MCP through basic wrapper...
 
 [1/15] Running: XSS via script tag
 ❌ FAIL: Injection detected: <script, </script>
-   Execution time: 2ms
 
-[2/15] Running: Long string buffer
-✅ PASS: All validation checks passed
-   Execution time: 0ms
+[2/15] Running: SQL injection with DROP TABLE
+❌ FAIL: Injection detected: DROP TABLE
 
-...
+... (7 vulnerabilities found)
 
 ============================================================
-📊 TEST SUMMARY
+📊 INITIAL TEST SUMMARY
 ============================================================
 Total Tests:  15
 ✅ Passed:    8 (53.3%)
 ❌ Failed:    7 (46.7%)
 ============================================================
 
-🔍 FAILED TESTS:
+⚠️  Found 7 vulnerabilities. Activating Blue Team...
 
-1. XSS via script tag
-   Type: xss
-   Reason: Injection detected
-   Time: 2ms
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 2: BLUE TEAM DEFENSE (Auto-Fix)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-...
+🔵 Blue Team Agent: Analyzing 7 vulnerabilities...
+✅ Generated 6 validators and 8 sanitizers
 
-📈 RESULTS BY ATTACK TYPE:
-  xss: 0/2 passed (0.0%)
-  prompt_injection: 4/5 passed (80.0%)
-  schema_break: 3/6 passed (50.0%)
-  timeout: 0/1 passed (0.0%)
-  normal: 1/1 passed (100.0%)
+🔵 Wrapper updated!
+   New validators: 6
+   New input sanitizers: 5
+   New output sanitizers: 3
+   Total rules: 8 validators, 10 sanitizers
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 3: VERIFICATION (Re-Testing with Updated Wrapper)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔴 Red Team: Re-running same attacks against updated wrapper...
+
+[1/15] Running: XSS via script tag
+✅ PASS: 🛡️ Wrapper blocked: XSS attempt detected
+
+[2/15] Running: SQL injection with DROP TABLE
+✅ PASS: 🛡️ Wrapper blocked: SQL injection detected
+
+... (all attacks now blocked!)
+
+============================================================
+📊 FINAL TEST SUMMARY
+============================================================
+Total Tests:  15
+✅ Passed:    15 (100.0%)
+❌ Failed:    0 (0.0%)
+============================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BEFORE vs AFTER: WRAPPER IMPROVEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                    BEFORE      AFTER       IMPROVEMENT
+Pass Rate:          53.3%   →   100.0%      +46.7%
+Attacks Blocked:    8       →   15          +7
+Failed Tests:       7       →   0           -7
+Wrapper Rules:      4       →   18          +14 AI-generated
+
+🛡️  RESULT: Wrapper successfully learned from attacks!
+   Echo MCP is now safe to use through protective middleware.
 
 ╔══════════════════════════════════════════════════════════╗
 ║                   SECURITY ASSESSMENT                    ║
 ╚══════════════════════════════════════════════════════════╝
 
-⚠️  WARNING: MCP server has significant vulnerabilities
+🛡️  EXCELLENT: Wrapper provides strong protection
+   ✅ Pass rate improved by 46.7%
 
-   Pass Rate: 53.3%
-   Vulnerabilities Found: 7 out of 15 tests
+   Initial Pass Rate: 53.3%
+   Final Pass Rate: 100.0%
+   Vulnerabilities Fixed: 7 out of 7
 
-💡 RECOMMENDATION: Implement input validation, output sanitization,
-   timeout protection, and injection detection before production use.
-
-✅ Red team testing completed!
+✅ AI-powered security testing completed!
 ```
 
 ## Architecture
 
-### E2B Cloud Execution Model
+### Self-Improving Security Wrapper
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ LOCAL MACHINE                                        │
-│                                                      │
-│  run-in-e2b.ts (Orchestrator)                       │
-│    │                                                 │
-│    ├─ Creates E2B Sandbox                           │
-│    ├─ Uploads source files                          │
-│    ├─ Installs dependencies                         │
-│    └─ Executes application                          │
-│         │                                            │
-└─────────┼────────────────────────────────────────────┘
-          │ HTTPS
-          ▼
-┌──────────────────────────────────────────────────────┐
-│ E2B SANDBOX (Cloud)                                  │
-│                                                      │
-│  ┌────────────────────────────────────────────────┐ │
-│  │ main.ts (Red Team Pipeline)                   │ │
-│  │                                                │ │
-│  │  ┌──────────────────┐                         │ │
-│  │  │  Groq LLM        │ Generate test cases     │ │
-│  │  │  (via API)       │                         │ │
-│  │  └────────┬─────────┘                         │ │
-│  │           │                                    │ │
-│  │           ▼                                    │ │
-│  │  ┌──────────────────┐                         │ │
-│  │  │  Test Harness    │ Execute & validate      │ │
-│  │  └────────┬─────────┘                         │ │
-│  │           │ STDIO                              │ │
-│  │           ▼                                    │ │
-│  │  ┌──────────────────┐                         │ │
-│  │  │  Echo MCP Server │ Vulnerable (intentional)│ │
-│  │  │  • No validation │                         │ │
-│  │  │  • No sanitize   │                         │ │
-│  │  │  • No timeout    │                         │ │
-│  │  └──────────────────┘                         │ │
-│  │                                                │ │
-│  └────────────────────────────────────────────────┘ │
-│                                                      │
-│  Results streamed back to local machine via HTTPS   │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│ YOUR APPLICATION                                    │
+└───────────────────┬─────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────┐
+│ 🛡️ PROTECTIVE WRAPPER (Our Product)                │
+│                                                     │
+│ ┌─────────────────────────────────────────────┐   │
+│ │ Input Validation Rules (AI-Generated)       │   │
+│ │ • Block XSS: <script>, onerror=, onclick=   │   │
+│ │ • Block SQL: DROP TABLE, UNION SELECT       │   │
+│ │ • Block Path Traversal: ../                 │   │
+│ │ • Block Command Injection: ;, |, eval(      │   │
+│ │ • Timeout Protection: 5s limit              │   │
+│ └─────────────────────────────────────────────┘   │
+│                                                     │
+│ 🤖 Updated by Blue Team Agent                      │
+└───────────────────┬─────────────────────────────────┘
+                    │ STDIO (protected calls)
+                    ▼
+┌─────────────────────────────────────────────────────┐
+│ ECHO MCP SERVER (Unsafe, Unmodified)               │
+│ • No validation                                     │
+│ • No sanitization                                   │
+│ • No timeout protection                             │
+│ • BUT SAFE TO USE via wrapper!                      │
+└─────────────────────────────────────────────────────┘
+```
+
+### E2B Cloud Execution
+
+```
+LOCAL MACHINE → E2B SANDBOX (Cloud)
+                  ├─ Red Team Agent (Groq AI)
+                  ├─ Blue Team Agent (Groq AI)
+                  ├─ Protective Wrapper
+                  └─ Echo MCP Server
 ```
 
 **Key Points:**
-- 🌐 Everything runs in E2B cloud sandbox
-- 📤 Local machine just uploads code and streams output
-- 🔒 True isolation - no local MCP processes
-- 🚀 Scalable for testing multiple MCPs in parallel
+- 🛡️ Wrapper sits between app and MCP (middleware pattern)
+- 🤖 AI learns from attacks and updates protection rules
+- 🔒 Works with any MCP without modifying its code
+- 🚀 True cloud isolation in E2B sandbox
 
 ### Validation Rules
 

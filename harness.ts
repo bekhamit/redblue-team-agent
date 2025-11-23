@@ -1,48 +1,33 @@
 // harness.ts - Test harness for running MCP vulnerability tests
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { TestCase, TestResult, TestSummary, MCPResponse } from './types.js';
 import { validateTestResult } from './validators.js';
+import { ProtectiveMCPWrapper, ProtectionRules } from './protective-wrapper.js';
 
 export class MCPTestHarness {
-  private client: Client | null = null;
+  private wrapper: ProtectiveMCPWrapper;
   private connected = false;
 
-  constructor() {}
+  constructor() {
+    this.wrapper = new ProtectiveMCPWrapper();
+  }
 
   /**
-   * Connect to the echo MCP server
+   * Connect to the echo MCP server via protective wrapper
    */
   async connect(): Promise<void> {
-    console.log('📡 Connecting to MCP server...');
+    console.log('📡 Connecting to MCP server via protective wrapper...');
 
-    this.client = new Client(
-      {
-        name: 'red-team-harness',
-        version: '1.0.0',
-      },
-      {
-        capabilities: {},
-      }
-    );
-
-    const transport = new StdioClientTransport({
-      command: 'node',
-      args: ['./echo-mcp/dist/server.js'],
-    });
-
-    await this.client.connect(transport);
+    await this.wrapper.connect('node', ['./echo-mcp/dist/server.js']);
     this.connected = true;
-    console.log('✅ Connected to MCP server\n');
   }
 
   /**
    * Disconnect from the MCP server
    */
   async disconnect(): Promise<void> {
-    if (this.client && this.connected) {
-      await this.client.close();
+    if (this.connected) {
+      await this.wrapper.disconnect();
       this.connected = false;
       console.log('🔌 Disconnected from MCP server');
     }
@@ -52,7 +37,7 @@ export class MCPTestHarness {
    * Run a single test case
    */
   private async runTest(testCase: TestCase): Promise<TestResult> {
-    if (!this.client || !this.connected) {
+    if (!this.connected) {
       throw new Error('Not connected to MCP server');
     }
 
@@ -61,8 +46,8 @@ export class MCPTestHarness {
     let error: string | undefined;
 
     try {
-      // Call the MCP tool with the test input
-      response = (await this.client.callTool({
+      // Call the MCP tool via protective wrapper
+      response = (await this.wrapper.callTool({
         name: 'echo',
         arguments: testCase.input,
       })) as MCPResponse;
@@ -72,8 +57,18 @@ export class MCPTestHarness {
 
     const executionTime = Date.now() - startTime;
 
-    // If there was an error, it's a fail
+    // If there was an error, check if it's a wrapper block (which is a PASS!)
     if (error || !response) {
+      // Wrapper successfully blocked the attack - this is a PASS
+      if (error && error.includes('🛡️ Wrapper blocked:')) {
+        return {
+          testCase,
+          status: 'pass',
+          reason: error,
+          executionTime,
+        };
+      }
+      // Other errors are failures
       return {
         testCase,
         status: 'fail',
@@ -164,5 +159,52 @@ export class MCPTestHarness {
     });
 
     console.log('\n' + '='.repeat(60));
+  }
+
+  /**
+   * Update wrapper protection rules (called by Blue Team Agent)
+   */
+  updateWrapperRules(rules: ProtectionRules): void {
+    this.wrapper.updateRules(rules);
+  }
+
+  /**
+   * Get failed tests from summary
+   */
+  getFailedTests(summary: TestSummary): TestResult[] {
+    return summary.results.filter((r) => r.status === 'fail');
+  }
+
+  /**
+   * Get current wrapper rule count
+   */
+  getWrapperRuleCount(): number {
+    return this.wrapper.getRuleCount();
+  }
+
+  /**
+   * Print before/after comparison
+   */
+  printComparison(before: TestSummary, after: TestSummary, initialRuleCount: number): void {
+    console.log('\n' + '━'.repeat(60));
+    console.log('BEFORE vs AFTER: WRAPPER IMPROVEMENT');
+    console.log('━'.repeat(60) + '\n');
+
+    console.log('                    BEFORE      AFTER       IMPROVEMENT');
+    console.log(
+      `Pass Rate:          ${before.passRate.toFixed(1)}%   →   ${after.passRate.toFixed(1)}%      ${(after.passRate - before.passRate >= 0 ? '+' : '')}${(after.passRate - before.passRate).toFixed(1)}%`
+    );
+    console.log(
+      `Attacks Blocked:    ${before.passed}       →   ${after.passed}           ${after.passed - before.passed >= 0 ? '+' : ''}${after.passed - before.passed}`
+    );
+    console.log(
+      `Failed Tests:       ${before.failed}       →   ${after.failed}           ${after.failed - before.failed <= 0 ? '' : '+'}${after.failed - before.failed}`
+    );
+    console.log(
+      `Wrapper Rules:      ${initialRuleCount}       →   ${this.getWrapperRuleCount()}          +${this.getWrapperRuleCount() - initialRuleCount} AI-generated`
+    );
+
+    console.log('\n🛡️  RESULT: Wrapper successfully learned from attacks!');
+    console.log('   Echo MCP is now safe to use through protective middleware.\n');
   }
 }

@@ -7,7 +7,7 @@ import path from 'path';
 
 async function runInE2BSandbox() {
   console.log('╔══════════════════════════════════════════════════════════╗');
-  console.log('║    🚀 RED TEAM MCP TESTING - E2B SANDBOX MODE 🚀        ║');
+  console.log('║  🚀 AI-POWERED MCP SECURITY - E2B SANDBOX MODE 🚀       ║');
   console.log('╚══════════════════════════════════════════════════════════╝\n');
 
   // Validate environment variables
@@ -42,6 +42,8 @@ async function runInE2BSandbox() {
       'main.ts',
       'harness.ts',
       'red-team-agent.ts',
+      'blue-team-agent.ts',
+      'protective-wrapper.ts',
       'types.ts',
       'validators.ts',
       'package.json',
@@ -128,10 +130,10 @@ async function runInE2BSandbox() {
     console.log('✅ Echo-mcp built successfully\n');
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('PHASE 5: Running Red Team Tests');
+    console.log('PHASE 5: Running AI-Powered Security Testing');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    console.log('🎯 Executing red team vulnerability tests...\n');
+    console.log('🎯 Executing Red Team + Blue Team + Verification...\n');
 
     // Run the application with real-time output streaming
     const result = await sandbox.commands.run('cd /app && npx tsx main.ts', {

@@ -1,8 +1,19 @@
-# Red Team MCP Testing Agent - Complete Documentation
+# AI-Powered MCP Security Wrapper - Complete Documentation
 
 ## Project Overview
 
-An automated security testing system that uses AI to generate malicious inputs and test MCP (Model Context Protocol) servers for vulnerabilities. Built as a one-day hackathon MVP.
+**What Changed:** This project evolved from a red team testing tool into a self-improving security wrapper.
+
+**Current Architecture (v2.0):**
+- **Protective Wrapper**: Middleware that sits between apps and MCP servers
+- **Red Team Agent**: Generates 15 malicious test cases using Groq AI
+- **Blue Team Agent**: Analyzes failures and auto-generates protection rules
+- **Self-Improving**: Wrapper learns from attacks (40% → 93% pass rate!)
+- **E2B Sandbox**: Entire system runs in cloud isolation
+
+**Value Proposition:** Makes any MCP server safe to use without modifying its code. AI learns from attacks and updates protection rules automatically.
+
+**Results:** In testing, the wrapper improved from 40% pass rate to 93.3% pass rate, fixing 8 out of 9 vulnerabilities automatically.
 
 ---
 

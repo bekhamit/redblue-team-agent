@@ -1,24 +1,27 @@
-// main.ts - Main entry point for Red Team MCP Testing
+// main.ts - Main entry point for Red Team + Blue Team MCP Security Testing
 
 import 'dotenv/config';
 import { RedTeamAgent } from './red-team-agent.js';
+import { BlueTeamAgent } from './blue-team-agent.js';
 import { MCPTestHarness } from './harness.js';
 import { TestCase } from './types.js';
 
 async function main() {
   console.log('╔══════════════════════════════════════════════════════════╗');
-  console.log('║         🎯 RED TEAM MCP VULNERABILITY TESTING 🎯         ║');
+  console.log('║   🎯 AI-POWERED MCP SECURITY: SELF-IMPROVING WRAPPER 🎯  ║');
   console.log('╚══════════════════════════════════════════════════════════╝\n');
 
   const redTeamAgent = new RedTeamAgent();
+  const blueTeamAgent = new BlueTeamAgent();
   const harness = new MCPTestHarness();
 
   try {
     // Step 1: Generate malicious test cases using red team agent
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('STEP 1: Generating Malicious Test Cases');
+    console.log('PHASE 1: RED TEAM ATTACK (Initial Testing)');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
+    console.log('🔴 Red Team: Generating malicious test cases...\n');
     const testCases: TestCase[] = await redTeamAgent.generateTestCases(15);
 
     console.log('📝 Generated test cases by attack type:');
@@ -32,54 +35,81 @@ async function main() {
     });
     console.log('');
 
-    // Step 2: Connect to vulnerable MCP server
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('STEP 2: Connecting to Vulnerable MCP Server');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
+    // Connect to MCP via basic wrapper
     await harness.connect();
+    const initialRuleCount = harness.getWrapperRuleCount();
 
-    // Step 3: Run tests through harness
+    // Run initial tests
+    console.log('🔴 Red Team: Attacking MCP through basic wrapper...\n');
+    const initialSummary = await harness.runTests(testCases);
+
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('STEP 3: Executing Tests Against MCP');
+    console.log('INITIAL TEST RESULTS');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    harness.printSummary(initialSummary);
+
+    // Check if we have vulnerabilities to fix
+    if (initialSummary.failed === 0) {
+      console.log('\n✅ No vulnerabilities found! Wrapper is already secure.\n');
+      await harness.disconnect();
+      process.exit(0);
+    }
+
+    console.log(`\n⚠️  Found ${initialSummary.failed} vulnerabilities. Activating Blue Team...\n`);
+
+    // Step 2: Blue Team analyzes and generates fixes
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('PHASE 2: BLUE TEAM DEFENSE (Auto-Fix)');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    const summary = await harness.runTests(testCases);
+    const newRules = await blueTeamAgent.analyzeAndGenerateFixes(initialSummary);
 
-    // Step 4: Display results
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('STEP 4: Analysis & Results');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    // Update wrapper with new rules
+    harness.updateWrapperRules(newRules);
 
-    harness.printSummary(summary);
+    // Step 3: Verification - re-run tests with updated wrapper
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('PHASE 3: VERIFICATION (Re-Testing with Updated Wrapper)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    console.log('🔴 Red Team: Re-running same attacks against updated wrapper...\n');
+    const finalSummary = await harness.runTests(testCases);
+
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('FINAL TEST RESULTS');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    harness.printSummary(finalSummary);
+
+    // Step 4: Show before/after comparison
+    harness.printComparison(initialSummary, finalSummary, initialRuleCount);
 
     // Cleanup
     await harness.disconnect();
 
     // Final assessment
-    console.log('\n╔══════════════════════════════════════════════════════════╗');
+    console.log('╔══════════════════════════════════════════════════════════╗');
     console.log('║                   SECURITY ASSESSMENT                    ║');
     console.log('╚══════════════════════════════════════════════════════════╝\n');
 
-    if (summary.passRate >= 90) {
-      console.log('🛡️  EXCELLENT: MCP server has strong protections');
-    } else if (summary.passRate >= 70) {
-      console.log('⚠️  GOOD: MCP server has some protections but needs improvement');
-    } else if (summary.passRate >= 50) {
-      console.log('⚠️  WARNING: MCP server has significant vulnerabilities');
+    const improvement = finalSummary.passRate - initialSummary.passRate;
+
+    if (finalSummary.passRate >= 90) {
+      console.log('🛡️  EXCELLENT: Wrapper provides strong protection');
+      console.log(`   ✅ Pass rate improved by ${improvement.toFixed(1)}%`);
+    } else if (finalSummary.passRate >= 70) {
+      console.log('⚠️  GOOD: Wrapper improved but needs more work');
+      console.log(`   ⚠️  Pass rate improved by ${improvement.toFixed(1)}%`);
     } else {
-      console.log('🚨 CRITICAL: MCP server is highly vulnerable to attacks');
+      console.log('🚨 WARNING: Wrapper still has vulnerabilities');
+      console.log(`   ⚠️  Pass rate improved by ${improvement.toFixed(1)}%`);
+      console.log('   💡 Consider running blue team again for additional improvements');
     }
 
-    console.log(`\n   Pass Rate: ${summary.passRate.toFixed(1)}%`);
-    console.log(`   Vulnerabilities Found: ${summary.failed} out of ${summary.total} tests\n`);
+    console.log(`\n   Initial Pass Rate: ${initialSummary.passRate.toFixed(1)}%`);
+    console.log(`   Final Pass Rate: ${finalSummary.passRate.toFixed(1)}%`);
+    console.log(`   Vulnerabilities Fixed: ${initialSummary.failed - finalSummary.failed} out of ${initialSummary.failed}\n`);
 
-    if (summary.failed > 0) {
-      console.log('💡 RECOMMENDATION: Implement input validation, output sanitization,');
-      console.log('   timeout protection, and injection detection before production use.\n');
-    }
-
-    console.log('✅ Red team testing completed!\n');
+    console.log('✅ AI-powered security testing completed!\n');
     process.exit(0);
   } catch (error) {
     console.error('\n❌ Error during testing:', error);
