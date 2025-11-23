@@ -34,6 +34,23 @@ export class BlueTeamAgent {
     const failedTests = summary.results.filter((r) => r.status === 'fail');
     const analysis = this.analyzeFailures(failedTests);
 
+    // Show thinking: Display vulnerability analysis
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🧠 BLUE TEAM THINKING: Analyzing Attack Patterns');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('📊 Vulnerability Breakdown:');
+    analysis.forEach((vuln) => {
+      console.log(`\n   ${vuln.attackType}: ${vuln.count} failure(s)`);
+      console.log('   Example vulnerable inputs:');
+      vuln.examples.slice(0, 2).forEach((ex, idx) => {
+        const inputStr = JSON.stringify(ex.input).substring(0, 80);
+        console.log(`     ${idx + 1}. ${inputStr}${inputStr.length >= 80 ? '...' : ''}`);
+        console.log(`        Why it failed: ${ex.reason.substring(0, 100)}${ex.reason.length > 100 ? '...' : ''}`);
+      });
+    });
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('🛡️  Generating protection rules to block these attacks...\n');
+
     // Step 2: Generate protection rules using AI
     const rules = await this.generateProtectionRules(analysis);
 
@@ -121,6 +138,20 @@ EXAMPLE OUTPUT FORMAT (respond with ONLY this JSON structure):
 
 Generate comprehensive protection rules based on the vulnerabilities. Return ONLY valid JSON, no extra text.`;
 
+    // Show thinking: Display the prompt being sent to AI
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🧠 BLUE TEAM THINKING: Requesting Protection Rules from AI');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('📝 Prompt being sent to AI:');
+    console.log('─'.repeat(60));
+    console.log(prompt.length > 800 ? prompt.substring(0, 800) + '...\n[truncated]' : prompt);
+    console.log('─'.repeat(60));
+    console.log('\n⚙️  Model Configuration:');
+    console.log('   Model: llama-3.3-70b-versatile');
+    console.log('   Temperature: 0.3 (low for precise security rules)');
+    console.log('   Max Tokens: 3000');
+    console.log('\n⏳ Waiting for AI to generate protection rules...\n');
+
     try {
       const response = await this.groqClient.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
@@ -144,6 +175,14 @@ Generate comprehensive protection rules based on the vulnerabilities. Return ONL
         throw new Error('No response from Groq');
       }
 
+      // Show thinking: Display raw AI response
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🤖 AI RAW RESPONSE');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(content.length > 1200 ? content.substring(0, 1200) + '...\n[truncated - full length: ' + content.length + ' chars]' : content);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('🔍 Parsing protection rules...\n');
+
       // Extract JSON from response
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
@@ -152,6 +191,30 @@ Generate comprehensive protection rules based on the vulnerabilities. Return ONL
       }
 
       const rulesData = JSON.parse(jsonMatch[0]);
+
+      console.log('✓ Successfully parsed JSON\n');
+
+      // Show thinking: Display what rules we're converting
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔧 Converting Protection Rules to Functions');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log(`📋 Input Validators: ${rulesData.inputValidators?.length || 0}`);
+      rulesData.inputValidators?.forEach((rule: any, idx: number) => {
+        console.log(`   ${idx + 1}. ${rule.name}`);
+        const codePreview = rule.code.substring(0, 70).replace(/\n/g, ' ');
+        console.log(`      Code: ${codePreview}${codePreview.length >= 70 ? '...' : ''}`);
+      });
+
+      console.log(`\n📋 Input Sanitizers: ${rulesData.inputSanitizers?.length || 0}`);
+      rulesData.inputSanitizers?.forEach((rule: any, idx: number) => {
+        console.log(`   ${idx + 1}. ${rule.name}`);
+      });
+
+      console.log(`\n📋 Output Sanitizers: ${rulesData.outputSanitizers?.length || 0}`);
+      rulesData.outputSanitizers?.forEach((rule: any, idx: number) => {
+        console.log(`   ${idx + 1}. ${rule.name}`);
+      });
+      console.log('\n⚙️  Converting code strings to executable functions using eval()...\n');
 
       // Convert string code to actual functions
       const protectionRules: ProtectionRules = {
@@ -184,6 +247,17 @@ Generate comprehensive protection rules based on the vulnerabilities. Return ONL
           }
         }),
       };
+
+      // Show thinking: Confirm successful activation
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ PROTECTION RULES ACTIVATED');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`✓ ${protectionRules.inputValidators.length} input validators loaded`);
+      console.log(`✓ ${protectionRules.inputSanitizers.length} input sanitizers loaded`);
+      console.log(`✓ ${protectionRules.outputSanitizers.length} output sanitizers loaded`);
+      console.log(`⏱️  Timeout protection: ${protectionRules.timeoutMs}ms`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('🛡️  Wrapper is now ready to block attacks!\n');
 
       return protectionRules;
     } catch (error) {

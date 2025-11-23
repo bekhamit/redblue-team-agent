@@ -79,6 +79,20 @@ Example format:
 Generate creative, diverse attacks. Think like a real attacker. Make ${numTests} test cases.
 REMEMBER: Pure JSON only, no JavaScript code!`;
 
+    // Show thinking: Display the prompt being sent to AI
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🧠 RED TEAM THINKING: Crafting Attack Scenarios');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('📝 Prompt being sent to AI:');
+    console.log('─'.repeat(60));
+    console.log(prompt.length > 800 ? prompt.substring(0, 800) + '...\n[truncated]' : prompt);
+    console.log('─'.repeat(60));
+    console.log('\n⚙️  Model Configuration:');
+    console.log('   Model: llama-3.3-70b-versatile');
+    console.log('   Temperature: 0.9 (high creativity for diverse attacks)');
+    console.log('   Max Tokens: 4000');
+    console.log('\n⏳ Waiting for AI to generate attack scenarios...\n');
+
     const response = await this.groqClient.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
@@ -100,6 +114,14 @@ REMEMBER: Pure JSON only, no JavaScript code!`;
       throw new Error('No response from Groq');
     }
 
+    // Show thinking: Display raw AI response
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🤖 AI RAW RESPONSE');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(content.length > 1000 ? content.substring(0, 1000) + '...\n[truncated - full length: ' + content.length + ' chars]' : content);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('🔍 Parsing and validating response...\n');
+
     try {
       // Extract JSON from response (in case there's extra text)
       let jsonMatch = content.match(/\[[\s\S]*\]/);
@@ -108,13 +130,31 @@ REMEMBER: Pure JSON only, no JavaScript code!`;
       }
 
       let jsonString = jsonMatch[0];
+      console.log(`✓ Found JSON array (${jsonString.length} characters)`);
 
       // Clean up common JavaScript patterns that aren't valid JSON
+      const originalLength = jsonString.length;
       jsonString = jsonString.replace(/\.repeat\(\d+\)/g, ''); // Remove .repeat() calls
       jsonString = jsonString.replace(/"A"\s*/g, '"AAAAAAAAAA"'); // Replace standalone "A" with actual string
 
+      if (jsonString.length !== originalLength) {
+        console.log(`✓ Cleaned JavaScript patterns from JSON`);
+      }
+
       const testCases = JSON.parse(jsonString) as TestCase[];
-      console.log(`✅ Generated ${testCases.length} test cases\n`);
+      console.log(`✓ Successfully parsed JSON\n`);
+
+      // Show thinking: Display generated test cases summary
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`✅ Generated ${testCases.length} Attack Test Cases`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      testCases.forEach((tc, idx) => {
+        const inputPreview = JSON.stringify(tc.input).substring(0, 60);
+        console.log(`${idx + 1}. ${tc.name}`);
+        console.log(`   Type: ${tc.attackType}`);
+        console.log(`   Input: ${inputPreview}${inputPreview.length >= 60 ? '...' : ''}`);
+      });
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
       return testCases;
     } catch (error) {
