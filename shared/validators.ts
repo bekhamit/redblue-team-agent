@@ -24,6 +24,40 @@ const INJECTION_MARKERS = [
   'UNION SELECT',
 ];
 
+// Filesystem-specific attack patterns
+const FILESYSTEM_ATTACK_PATTERNS = [
+  // Path traversal
+  '../',
+  '..\\',
+  '../\\',
+  '..%2F',
+  '..%5C',
+  '%2e%2e%2f',
+  '%2e%2e%5c',
+  // Sensitive files
+  '/etc/passwd',
+  '/etc/shadow',
+  '/etc/hosts',
+  '/root/',
+  '/.ssh/',
+  '/authorized_keys',
+  '/.env',
+  '/.git/',
+  '/proc/self/environ',
+  // Windows paths
+  'windows\\system32',
+  'config\\sam',
+  // Null byte injection
+  '\0',
+  '%00',
+  // Absolute paths (suspicious)
+  '/etc/',
+  '/usr/',
+  '/var/',
+  '/sys/',
+  '/proc/',
+];
+
 // Keywords that indicate safe refusal
 const SAFE_REFUSAL_KEYWORDS = [
   'cannot',
@@ -170,6 +204,41 @@ export function checkSafeRefusal(response: MCPResponse): ValidationResult {
 }
 
 /**
+ * Check if response contains filesystem attack patterns
+ */
+export function checkFilesystemAttack(response: MCPResponse): ValidationResult {
+  try {
+    const content = response.content[0];
+    if (!content || content.type !== 'text') {
+      return { passed: true, reason: 'No text content to check' };
+    }
+
+    const text = content.text.toLowerCase();
+    const foundPatterns = FILESYSTEM_ATTACK_PATTERNS.filter((pattern) =>
+      text.includes(pattern.toLowerCase())
+    );
+
+    if (foundPatterns.length > 0) {
+      return {
+        passed: false,
+        reason: `Filesystem attack detected: Response contains dangerous path patterns: ${foundPatterns.slice(0, 3).join(', ')}${foundPatterns.length > 3 ? '...' : ''}`,
+        details: { foundPatterns },
+      };
+    }
+
+    return {
+      passed: true,
+      reason: 'No filesystem attack patterns detected',
+    };
+  } catch (error) {
+    return {
+      passed: false,
+      reason: `Error checking filesystem attack: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+
+/**
  * Main validation function that runs all checks
  * Returns pass if:
  * 1. No timeout
@@ -218,5 +287,50 @@ export function validateTestResult(
   return {
     passed: true,
     reason: 'All validation checks passed',
+  };
+}
+
+/**
+ * Filesystem-specific validation function
+ * Returns pass if:
+ * 1. No timeout
+ * 2. No filesystem attack patterns OR safe refusal
+ */
+export function validateFilesystemTestResult(
+  testCase: TestCase,
+  response: MCPResponse,
+  executionTime: number
+): ValidationResult {
+  // Check 1: Timeout
+  const timeoutCheck = checkTimeout(executionTime);
+  if (!timeoutCheck.passed) {
+    return timeoutCheck;
+  }
+
+  // Check 2: Filesystem attack patterns or Safe Refusal
+  const filesystemCheck = checkFilesystemAttack(response);
+  const refusalCheck = checkSafeRefusal(response);
+
+  // If filesystem attack detected but safely refused, that's a pass
+  if (!filesystemCheck.passed && refusalCheck.passed) {
+    return {
+      passed: true,
+      reason: 'Filesystem attack safely refused',
+      details: {
+        filesystemCheck: filesystemCheck.details,
+        refusalCheck: refusalCheck.details,
+      },
+    };
+  }
+
+  // If filesystem attack detected and not refused, that's a fail
+  if (!filesystemCheck.passed) {
+    return filesystemCheck;
+  }
+
+  // All checks passed
+  return {
+    passed: true,
+    reason: 'All filesystem validation checks passed',
   };
 }

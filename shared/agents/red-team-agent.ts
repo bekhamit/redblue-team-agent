@@ -319,4 +319,158 @@ Generate creative, diverse ${attackType} attacks. Return ONLY valid JSON array:
 
     return testCases;
   }
+
+  /**
+   * Generate filesystem-specific test cases for filesystem MCP
+   */
+  async generateFilesystemTestCases(numTests: number = 15): Promise<TestCase[]> {
+    console.log(`🗂️  Red Team Agent: Generating ${numTests} filesystem attack test cases...\n`);
+
+    // For MVP/hackathon: Use reliable fallback test cases
+    // Groq sometimes generates incomplete JSON for filesystem tests
+    console.log('⚠️  Using curated filesystem test cases for reliability...\n');
+    return this.getFallbackFilesystemTestCases(numTests);
+
+    /* TODO: Fix Groq JSON parsing for filesystem tests
+    const prompt = `You are a red team security researcher testing a filesystem MCP server...`;
+
+    try {
+      const response = await this.groqClient.chat.completions.create({...});
+      const testCases = JSON.parse(jsonMatch[0]) as TestCase[];
+      return testCases;
+    } catch (error) {
+      return this.getFallbackFilesystemTestCases(numTests);
+    }
+    */
+  }
+
+  /**
+   * Fallback filesystem test cases if LLM generation fails
+   */
+  private getFallbackFilesystemTestCases(numTests: number): TestCase[] {
+    const allTestCases: TestCase[] = [
+      {
+        id: 'fs-test-1',
+        name: 'Path traversal to /etc/passwd',
+        description: 'Classic path traversal attack',
+        input: { path: '../../etc/passwd' },
+        expectedOutcome: 'fail',
+        attackType: 'path_traversal',
+      },
+      {
+        id: 'fs-test-2',
+        name: 'Path traversal to root SSH keys',
+        description: 'Attempt to access SSH private keys',
+        input: { path: '../../../root/.ssh/id_rsa' },
+        expectedOutcome: 'fail',
+        attackType: 'path_traversal',
+      },
+      {
+        id: 'fs-test-3',
+        name: 'Absolute path to /etc/shadow',
+        description: 'Direct absolute path attack',
+        input: { path: '/etc/shadow' },
+        expectedOutcome: 'fail',
+        attackType: 'unauthorized_access',
+      },
+      {
+        id: 'fs-test-4',
+        name: 'Access to .env file',
+        description: 'Attempt to read environment variables',
+        input: { path: '../../../.env' },
+        expectedOutcome: 'fail',
+        attackType: 'unauthorized_access',
+      },
+      {
+        id: 'fs-test-5',
+        name: 'Access to .git/config',
+        description: 'Attempt to access git configuration',
+        input: { path: '../../.git/config' },
+        expectedOutcome: 'fail',
+        attackType: 'unauthorized_access',
+      },
+      {
+        id: 'fs-test-6',
+        name: 'Encoded path traversal',
+        description: 'URL-encoded path traversal',
+        input: { path: '..%2F..%2Fetc%2Fpasswd' },
+        expectedOutcome: 'fail',
+        attackType: 'path_traversal',
+      },
+      {
+        id: 'fs-test-7',
+        name: 'Double-encoded path traversal',
+        description: 'Double URL-encoded attack',
+        input: { path: '%252e%252e%252fetc%252fpasswd' },
+        expectedOutcome: 'fail',
+        attackType: 'path_traversal',
+      },
+      {
+        id: 'fs-test-8',
+        name: 'Null byte injection',
+        description: 'Null byte to bypass extension checks',
+        input: { path: '../../etc/passwd\0.txt' },
+        expectedOutcome: 'fail',
+        attackType: 'path_traversal',
+      },
+      {
+        id: 'fs-test-9',
+        name: 'Windows-style path traversal',
+        description: 'Backslash-based traversal',
+        input: { path: '..\\..\\windows\\system32\\config\\sam' },
+        expectedOutcome: 'fail',
+        attackType: 'path_traversal',
+      },
+      {
+        id: 'fs-test-10',
+        name: 'Overwrite authorized_keys',
+        description: 'Attempt to write SSH authorized keys',
+        input: { path: '../../../root/.ssh/authorized_keys', content: 'ssh-rsa AAAA...' },
+        expectedOutcome: 'fail',
+        attackType: 'file_overwrite',
+      },
+      {
+        id: 'fs-test-11',
+        name: 'Overwrite /etc/hosts',
+        description: 'Attempt to modify hosts file',
+        input: { path: '/etc/hosts', content: '127.0.0.1 evil.com' },
+        expectedOutcome: 'fail',
+        attackType: 'file_overwrite',
+      },
+      {
+        id: 'fs-test-12',
+        name: 'Access /proc/self/environ',
+        description: 'Attempt to read process environment',
+        input: { path: '/proc/self/environ' },
+        expectedOutcome: 'fail',
+        attackType: 'unauthorized_access',
+      },
+      {
+        id: 'fs-test-13',
+        name: 'Mixed slash types',
+        description: 'Mixed forward and back slashes',
+        input: { path: '../\\../etc/passwd' },
+        expectedOutcome: 'fail',
+        attackType: 'path_traversal',
+      },
+      {
+        id: 'fs-test-14',
+        name: 'Normal file read in allowed directory',
+        description: 'Legitimate file access',
+        input: { path: '/allowed/test.txt' },
+        expectedOutcome: 'pass',
+        attackType: 'normal',
+      },
+      {
+        id: 'fs-test-15',
+        name: 'Normal subdirectory access',
+        description: 'Legitimate subdirectory access',
+        input: { path: '/allowed/subdir/file.txt' },
+        expectedOutcome: 'pass',
+        attackType: 'normal',
+      },
+    ];
+
+    return allTestCases.slice(0, numTests);
+  }
 }

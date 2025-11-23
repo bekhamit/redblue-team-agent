@@ -1,10 +1,10 @@
-// main.ts - Main entry point for Red Team + Blue Team MCP Security Testing
+// main.ts - Main entry point for Echo MCP Security Testing
 
 import 'dotenv/config';
-import { RedTeamAgent } from './red-team-agent.js';
-import { BlueTeamAgent } from './blue-team-agent.js';
-import { MCPTestHarness } from './harness.js';
-import { TestCase } from './types.js';
+import { RedTeamAgent } from '../../shared/agents/red-team-agent.js';
+import { BlueTeamAgent } from '../../shared/agents/blue-team-agent.js';
+import { EchoMCPTestHarness } from './harness-echo.js';
+import { TestCase } from '../../shared/types.js';
 
 async function main() {
   console.log('╔══════════════════════════════════════════════════════════╗');
@@ -13,7 +13,7 @@ async function main() {
 
   const redTeamAgent = new RedTeamAgent();
   const blueTeamAgent = new BlueTeamAgent();
-  const harness = new MCPTestHarness();
+  const harness = new EchoMCPTestHarness();
 
   try {
     // Step 1: Generate malicious test cases using red team agent
@@ -107,9 +107,11 @@ async function main() {
 
     console.log(`\n   Initial Pass Rate: ${initialSummary.passRate.toFixed(1)}%`);
     console.log(`   Final Pass Rate: ${finalSummary.passRate.toFixed(1)}%`);
-    console.log(`   Vulnerabilities Fixed: ${initialSummary.failed - finalSummary.failed} out of ${initialSummary.failed}\n`);
+    console.log(
+      `   Vulnerabilities Fixed: ${initialSummary.failed - finalSummary.failed} out of ${initialSummary.failed}\n`
+    );
 
-    console.log('✅ AI-powered security testing completed!\n');
+    console.log('✅ AI-powered security testing completed!\ n');
     process.exit(0);
   } catch (error) {
     console.error('\n❌ Error during testing:', error);

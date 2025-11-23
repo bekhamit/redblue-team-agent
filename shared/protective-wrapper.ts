@@ -44,21 +44,26 @@ export class ProtectiveMCPWrapper {
     return {
       timeoutMs: 5000,
       inputValidators: [
-        // Basic length check
+        // Basic length check (handles both message and path fields)
         (input: any) => {
-          if (input.message && input.message.length > 10000) {
+          const textField = input.message || input.path || '';
+          if (textField.length > 10000) {
             return { safe: false, reason: 'Input too long (>10000 chars)' };
           }
           return { safe: true };
         },
       ],
       inputSanitizers: [
-        // Basic null byte removal
+        // Basic null byte removal (handles both message and path fields)
         (input: any) => {
+          const result = { ...input };
           if (input.message && typeof input.message === 'string') {
-            return { ...input, message: input.message.replace(/\0/g, '') };
+            result.message = input.message.replace(/\0/g, '');
           }
-          return input;
+          if (input.path && typeof input.path === 'string') {
+            result.path = input.path.replace(/\0/g, '');
+          }
+          return result;
         },
       ],
       outputSanitizers: [

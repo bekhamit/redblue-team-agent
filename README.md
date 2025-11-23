@@ -78,15 +78,41 @@ This will:
 - ✅ True cloud isolation in E2B
 - ✅ Works with any MCP server
 
-### 💻 Local Mode (Alternative)
+### 💻 Echo MCP Demo (Local)
 
-For faster iteration during development:
+Test with the simple echo MCP server:
 
 ```bash
-npm run start:local
+npm run start:echo
 ```
 
 Runs everything locally without E2B sandbox (requires manual echo-mcp build).
+
+### 🗂️ Filesystem MCP Demo (Docker Hub)
+
+Test the official filesystem MCP server from Docker MCP hub:
+
+```bash
+npm run start:filesystem
+```
+
+This demonstrates the wrapper protecting a **real-world MCP** from Docker hub against:
+- Path traversal attacks (`../../etc/passwd`)
+- Directory escape attempts
+- Unauthorized file access (`.env`, `.ssh/`, `.git/`)
+- Absolute path attacks (`/etc/shadow`)
+- Encoded path traversal (`..%2F..%2F`)
+- File overwrite attacks
+
+**Requirements:**
+- Docker installed and running
+- Internet connection (to pull `mcp/filesystem` image)
+
+**Benefits:**
+- ✅ Uses official Docker MCP hub server
+- ✅ Real-world filesystem security testing
+- ✅ Path traversal and directory escape protection
+- ✅ Shows wrapper works with any MCP, not just toy examples
 
 ### Other Commands
 
@@ -276,18 +302,25 @@ Tests **PASS** if:
 
 ```
 redblue-agent/
-├── run-in-e2b.ts          # E2B orchestrator (main entry point)
-├── main.ts                # Red team testing pipeline (runs in E2B)
-├── red-team-agent.ts      # AI-powered test case generator
-├── harness.ts             # Test execution harness
-├── validators.ts          # Pass/fail detection logic
-├── types.ts               # Shared TypeScript types
-├── echo-mcp/              # Vulnerable MCP server for testing
-│   ├── src/server.ts      # Intentionally vulnerable echo server
+├── demos/
+│   ├── echo/
+│   │   ├── main.ts                 # Echo MCP demo entry point
+│   │   └── harness-echo.ts         # Echo-specific test harness
+│   └── filesystem/
+│       ├── main.ts                 # Filesystem MCP demo entry point
+│       └── harness-filesystem.ts   # Filesystem-specific test harness
+├── shared/
+│   ├── agents/
+│   │   ├── red-team-agent.ts       # AI-powered attack generator
+│   │   └── blue-team-agent.ts      # AI-powered defense generator
+│   ├── protective-wrapper.ts       # Self-improving security middleware
+│   ├── validators.ts               # Pass/fail detection logic
+│   └── types.ts                    # Shared TypeScript types
+├── echo-mcp/                       # Vulnerable echo MCP server
+│   ├── src/server.ts               # Intentionally vulnerable echo server
 │   └── package.json
-├── test-harness.ts        # Hardcoded test runner (local only)
-├── test-echo-mcp.ts       # Echo MCP verification (local only)
-└── index.ts               # Original research agent (separate feature)
+├── run-in-e2b.ts                   # E2B sandbox orchestrator
+└── package.json
 ```
 
 ## Customization

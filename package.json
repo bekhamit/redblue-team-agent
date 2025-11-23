@@ -5,7 +5,8 @@
   "description": "Red team MCP vulnerability testing agent",
   "scripts": {
     "start": "npx tsx run-in-e2b.ts",
-    "start:local": "npx tsx main.ts",
+    "start:echo": "npx tsx demos/echo/main.ts",
+    "start:filesystem": "npx tsx demos/filesystem/main.ts",
     "test:harness": "npx tsx test-harness.ts",
     "test:echo": "npx tsx test-echo-mcp.ts",
     "research": "npx tsx index.ts"

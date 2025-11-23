@@ -1,10 +1,10 @@
-// harness.ts - Test harness for running MCP vulnerability tests
+// harness-echo.ts - Test harness for Echo MCP
 
-import { TestCase, TestResult, TestSummary, MCPResponse } from './types.js';
-import { validateTestResult } from './validators.js';
-import { ProtectiveMCPWrapper, ProtectionRules } from './protective-wrapper.js';
+import { TestCase, TestResult, TestSummary, MCPResponse } from '../../shared/types.js';
+import { validateTestResult } from '../../shared/validators.js';
+import { ProtectiveMCPWrapper, ProtectionRules } from '../../shared/protective-wrapper.js';
 
-export class MCPTestHarness {
+export class EchoMCPTestHarness {
   private wrapper: ProtectiveMCPWrapper;
   private connected = false;
 
@@ -16,9 +16,8 @@ export class MCPTestHarness {
    * Connect to the echo MCP server via protective wrapper
    */
   async connect(): Promise<void> {
-    console.log('📡 Connecting to MCP server via protective wrapper...');
-
-    await this.wrapper.connect('node', ['./echo-mcp/dist/server.js']);
+    console.log('📡 Connecting to Echo MCP server via protective wrapper...');
+    await this.wrapper.connect('node', ['../../echo-mcp/dist/server.js']);
     this.connected = true;
   }
 
@@ -46,7 +45,6 @@ export class MCPTestHarness {
     let error: string | undefined;
 
     try {
-      // Call the MCP tool via protective wrapper
       response = (await this.wrapper.callTool({
         name: 'echo',
         arguments: testCase.input,
@@ -59,7 +57,6 @@ export class MCPTestHarness {
 
     // If there was an error, check if it's a wrapper block (which is a PASS!)
     if (error || !response) {
-      // Wrapper successfully blocked the attack - this is a PASS
       if (error && error.includes('🛡️ Wrapper blocked:')) {
         return {
           testCase,
@@ -68,7 +65,6 @@ export class MCPTestHarness {
           executionTime,
         };
       }
-      // Other errors are failures
       return {
         testCase,
         status: 'fail',
@@ -162,17 +158,10 @@ export class MCPTestHarness {
   }
 
   /**
-   * Update wrapper protection rules (called by Blue Team Agent)
+   * Update wrapper protection rules
    */
   updateWrapperRules(rules: ProtectionRules): void {
     this.wrapper.updateRules(rules);
-  }
-
-  /**
-   * Get failed tests from summary
-   */
-  getFailedTests(summary: TestSummary): TestResult[] {
-    return summary.results.filter((r) => r.status === 'fail');
   }
 
   /**

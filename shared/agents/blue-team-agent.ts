@@ -280,6 +280,58 @@ Generate comprehensive protection rules based on the vulnerabilities. Return ONL
       });
     }
 
+    // Check if we have path_traversal vulnerabilities (filesystem)
+    if (analysis.some((a) => a.attackType === 'path_traversal')) {
+      rules.inputValidators.push((input: any): ValidationResult => {
+        if (input.path?.match(/\.\.|%2e|%2f|%5c|\\\.\\\.|\\\\|\.\\\//i)) {
+          return { safe: false, reason: 'Path traversal detected' };
+        }
+        return { safe: true };
+      });
+
+      rules.inputSanitizers.push((input: any) => {
+        if (input.path && typeof input.path === 'string') {
+          return {
+            ...input,
+            path: input.path.replace(/\.\.\//g, '').replace(/\.\.\\/g, ''),
+          };
+        }
+        return input;
+      });
+    }
+
+    // Check if we have unauthorized_access vulnerabilities (filesystem)
+    if (analysis.some((a) => a.attackType === 'unauthorized_access')) {
+      rules.inputValidators.push((input: any): ValidationResult => {
+        if (
+          input.path?.match(/\/etc\/|\/root\/|\/proc\/|\/sys\/|\.ssh|\.env|\.git|authorized_keys/i)
+        ) {
+          return { safe: false, reason: 'Unauthorized file access detected' };
+        }
+        return { safe: true };
+      });
+
+      rules.inputSanitizers.push((input: any) => {
+        if (input.path && typeof input.path === 'string') {
+          // Block access to sensitive paths
+          if (input.path.match(/\/etc\/|\/root\/|\.ssh|\.env|\.git/i)) {
+            return { ...input, path: '/allowed/blocked.txt' };
+          }
+        }
+        return input;
+      });
+    }
+
+    // Check if we have file_overwrite vulnerabilities (filesystem)
+    if (analysis.some((a) => a.attackType === 'file_overwrite')) {
+      rules.inputValidators.push((input: any): ValidationResult => {
+        if (input.content && input.path?.match(/\/etc\/|\/root\/|authorized_keys|\.bashrc/i)) {
+          return { safe: false, reason: 'File overwrite attack detected' };
+        }
+        return { safe: true };
+      });
+    }
+
     return rules;
   }
 }
