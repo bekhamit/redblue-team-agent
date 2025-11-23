@@ -54,49 +54,43 @@ You'll need API keys from:
 
 ## Usage
 
-### 🚀 AI-Powered Security Testing in E2B Sandbox (Main)
+### 🎯 Main Demos (Choose Your Path)
 
-Run the complete Red Team + Blue Team cycle in E2B cloud sandbox:
-
+#### For Hackathon Judges - Full Cloud Demo:
 ```bash
-npm start
+npm run start:filesystem:e2b
+```
+**✅ Meets ALL hackathon requirements:**
+- E2B sandbox isolation (full cloud execution)
+- Docker MCP hub (`mcp/filesystem`)
+- AI-powered security testing (Red Team + Blue Team)
+- Before/after improvement metrics
+
+#### For Quick Local Testing:
+```bash
+npm run start:filesystem    # Filesystem MCP locally (Docker required)
+npm run start:echo          # Echo MCP locally (simple baseline)
 ```
 
-This will:
-1. **Create E2B sandbox** in the cloud
-2. **Upload all source files** to the sandbox
-3. **Install dependencies** and build MCP server
-4. **Phase 1 - Red Team**: Generate and execute 15 malicious attacks
-5. **Phase 2 - Blue Team**: Analyze failures and generate protection rules
-6. **Phase 3 - Verification**: Re-test with improved wrapper
-7. **Show before/after** comparison with metrics
-8. **Clean up sandbox** automatically
+### 📋 All Available Commands:
 
-**Benefits:**
-- ✅ Self-improving AI security
-- ✅ Clear before/after demonstration
-- ✅ True cloud isolation in E2B
-- ✅ Works with any MCP server
+| Command | Description | Location | Requirements |
+|---------|-------------|----------|--------------|
+| `npm run start:filesystem:e2b` | 🏆 **Hackathon Demo** - Filesystem MCP in E2B | Cloud | E2B API key, Groq API key |
+| `npm start` | Echo MCP in E2B sandbox | Cloud | E2B API key, Groq API key |
+| `npm run start:filesystem` | Filesystem MCP locally | Local | Docker, Groq API key |
+| `npm run start:echo` | Echo MCP locally | Local | Groq API key |
 
-### 💻 Echo MCP Demo (Local)
+### 🚀 Recommended Flow:
 
-Test with the simple echo MCP server:
+1. **Development**: `npm run start:filesystem` (fast local testing)
+2. **Demo**: `npm run start:filesystem:e2b` (full cloud hackathon submission)
 
-```bash
-npm run start:echo
-```
+---
 
-Runs everything locally without E2B sandbox (requires manual echo-mcp build).
+## What Each Demo Does
 
-### 🗂️ Filesystem MCP Demo (Docker Hub)
-
-Test the official filesystem MCP server from Docker MCP hub:
-
-```bash
-npm run start:filesystem
-```
-
-This demonstrates the wrapper protecting a **real-world MCP** from Docker hub against:
+### Filesystem MCP Demo (Docker Hub)
 - Path traversal attacks (`../../etc/passwd`)
 - Directory escape attempts
 - Unauthorized file access (`.env`, `.ssh/`, `.git/`)

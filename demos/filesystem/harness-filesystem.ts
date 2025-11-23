@@ -19,15 +19,34 @@ export class FilesystemMCPTestHarness {
     console.log('📡 Connecting to Filesystem MCP via Docker...');
 
     // Connect to filesystem MCP via Docker
-    await this.wrapper.connect('docker', [
-      'run',
-      '-i',
-      '--rm',
-      '-v',
-      '/tmp/mcp-test:/allowed',
-      'mcp/filesystem',
-      '/allowed',
-    ]);
+    // Use sudo when in E2B environment (run-in-e2b-filesystem.ts sets IN_E2B_SANDBOX=true)
+    const usesSudo = process.env.IN_E2B_SANDBOX === 'true';
+
+    if (usesSudo) {
+      // In E2B, use sudo docker
+      await this.wrapper.connect('sudo', [
+        'docker',
+        'run',
+        '-i',
+        '--rm',
+        '-v',
+        '/tmp/mcp-test:/allowed',
+        'mcp/filesystem',
+        '/allowed',
+      ]);
+    } else {
+      // Locally, use docker directly
+      await this.wrapper.connect('docker', [
+        'run',
+        '-i',
+        '--rm',
+        '-v',
+        '/tmp/mcp-test:/allowed',
+        'mcp/filesystem',
+        '/allowed',
+      ]);
+    }
+
     this.connected = true;
     console.log('✅ Connected to mcp/filesystem from Docker MCP hub\n');
   }

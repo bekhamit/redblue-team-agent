@@ -7,6 +7,7 @@
     "start": "npx tsx run-in-e2b.ts",
     "start:echo": "npx tsx demos/echo/main.ts",
     "start:filesystem": "npx tsx demos/filesystem/main.ts",
+    "start:filesystem:e2b": "npx tsx run-in-e2b-filesystem.ts",
     "test:harness": "npx tsx test-harness.ts",
     "test:echo": "npx tsx test-echo-mcp.ts",
     "research": "npx tsx index.ts"
